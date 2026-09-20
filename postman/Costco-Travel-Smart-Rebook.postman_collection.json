@@ -1,0 +1,367 @@
+{
+  "info": {
+    "_postman_id": "d2f9a3b0-5e6c-4a7b-9f1d-3c8e2b4a6d10",
+    "name": "Costco Travel Smart Rebook",
+    "description": "Independent engineering prototype. Not affiliated with Costco Wholesale or Costco Travel. Covers booking-service (:8080) orchestration/ops APIs and direct calls to the hotel (:8081) and car (:8082) supplier services.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Booking",
+      "item": [
+        {
+          "name": "Get Booking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingConfirmation}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{bookingConfirmation}}"]
+            },
+            "description": "Fetch the current state of the seeded demo booking (member, trip, line items, total)."
+          },
+          "response": []
+        },
+        {
+          "name": "Check Availability (read-only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newCheckIn\": \"2027-03-15\",\n  \"newCheckOut\": \"2027-03-20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingConfirmation}}/change/availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{bookingConfirmation}}", "change", "availability"]
+            },
+            "description": "Read-only. Calls both supplier services for real-time availability/pricing and returns current vs. proposed trip summaries plus the price difference. Does not create or change any reservation."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Change (Idempotency-Key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newCheckIn\": \"2027-03-15\",\n  \"newCheckOut\": \"2027-03-20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingConfirmation}}/change",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{bookingConfirmation}}", "change"]
+            },
+            "description": "Executes the real orchestration: reserve replacement hotel + car via HTTP, cancel the original only after the replacement is fully secured, or compensate and preserve the original on partial failure. Requires a client-generated Idempotency-Key (UUID). On success against the standard demo dates, the new confirmation is deterministically CT-DEMO-89412."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Change - Duplicate Request (same key, replay)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newCheckIn\": \"2027-03-15\",\n  \"newCheckOut\": \"2027-03-20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingConfirmation}}/change",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{bookingConfirmation}}", "change"]
+            },
+            "description": "Re-sends the exact same Idempotency-Key and request body as the previous request. Because the key + SHA-256 hash of the body match a stored idempotency_records row, the stored final response is replayed with zero supplier calls. Run this immediately after 'Submit Change' using the same idempotencyKey environment value."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Change Requests / Ops",
+      "item": [
+        {
+          "name": "Get Change Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/change-requests/{{changeRequestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "change-requests", "{{changeRequestId}}"]
+            },
+            "description": "Returns the change request's current status, reconciliation status, correlation ID, and pricing. Set changeRequestId from the response of Submit Change."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Change Request Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/change-requests/{{changeRequestId}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "change-requests", "{{changeRequestId}}", "events"]
+            },
+            "description": "Full persisted event timeline for one change request (e.g. CHANGE_REQUESTED, HOTEL_RESERVATION_CONFIRMED, CAR_RESERVATION_TIMEOUT, COMPENSATION_STARTED, ORIGINAL_BOOKING_PRESERVED, CHANGE_FAILED)."
+          },
+          "response": []
+        },
+        {
+          "name": "Reconcile Change Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/change-requests/{{changeRequestId}}/reconcile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "change-requests", "{{changeRequestId}}", "reconcile"]
+            },
+            "description": "Used after a CAR_AMBIGUOUS scenario leaves reconciliation_status=REQUIRED. Calls the car supplier's by-client-reference lookup to determine, after the fact, whether an orphan reservation was actually created, then cancels it if found and resolves the change request."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Incident",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/change-requests/{{changeRequestId}}/incident",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "change-requests", "{{changeRequestId}}", "incident"]
+            },
+            "description": "Creates a mock ServiceNow-style incident (INC-DEMO-####) tied to this change request, via MockServiceNowIncidentClient."
+          },
+          "response": []
+        },
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ops/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ops", "transactions"]
+            },
+            "description": "Ops transaction list backing /ops in the JSP UI."
+          },
+          "response": []
+        },
+        {
+          "name": "Transaction Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ops/transactions/{{correlationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ops", "transactions", "{{correlationId}}"]
+            },
+            "description": "Full change request + event timeline for one correlation ID (server-generated, e.g. CHG-7E9AC73C)."
+          },
+          "response": []
+        },
+        {
+          "name": "Supplier Reliability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ops/supplier-reliability",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ops", "supplier-reliability"]
+            },
+            "description": "Backed by SupplierReliabilityJdbcRepository calling the T-SQL stored procedure sp_supplier_reliability_report (PERCENTILE_CONT p95 latency per supplier) via JdbcTemplate."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Demo Controls",
+      "item": [
+        {
+          "name": "Set Scenario - NORMAL",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"scenario\": \"NORMAL\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/scenario",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "scenario"]
+            },
+            "description": "Supplier services behave normally. Real HTTP calls, no injected failures."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Scenario - HOTEL_FAILURE",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"scenario\": \"HOTEL_FAILURE\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/scenario",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "scenario"]
+            },
+            "description": "Hotel supplier availability succeeds but the reservation POST returns a real 503. Nothing to compensate since nothing was created."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Scenario - CAR_TIMEOUT",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"scenario\": \"CAR_TIMEOUT\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/scenario",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "scenario"]
+            },
+            "description": "THE DEMO SCENARIO. Car supplier delays past the 3s Feign read timeout without creating a reservation. Orchestrator compensates by cancelling the just-created hotel replacement and preserves the original booking as CONFIRMED, setting the change request to FAILED with reconciliationStatus=NOT_REQUIRED (nothing was orphaned)."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Scenario - CAR_AMBIGUOUS",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"scenario\": \"CAR_AMBIGUOUS\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/scenario",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "scenario"]
+            },
+            "description": "Car supplier DOES create the reservation, then responds after the client timeout. Indistinguishable at the HTTP client level from CAR_TIMEOUT, so the orchestrator never guesses: change request goes to FAILED with reconciliationStatus=REQUIRED. Use the Reconcile action afterward to find and cancel the orphan."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Demo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "reset"]
+            },
+            "description": "Clears events, change requests, supplier reservations, idempotency records, and incidents; re-seeds member and booking data; clears supplier in-memory state. Restores the system to exactly CT-DEMO-78291 CONFIRMED. Safe to run repeatedly mid-demo."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Supplier Services (direct)",
+      "item": [
+        {
+          "name": "Hotel - Check Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{hotelBaseUrl}}/api/hotels/availability?destination=Maui, Hawaii&checkIn=2027-03-15&checkOut=2027-03-20&roomType=Ocean View King",
+              "host": ["{{hotelBaseUrl}}"],
+              "path": ["api", "hotels", "availability"],
+              "query": [
+                { "key": "destination", "value": "Maui, Hawaii" },
+                { "key": "checkIn", "value": "2027-03-15" },
+                { "key": "checkOut", "value": "2027-03-20" },
+                { "key": "roomType", "value": "Ocean View King" }
+              ]
+            },
+            "description": "Direct call to the hotel supplier service (real, independent Spring Boot service on :8081), demonstrating actual service-to-service HTTP outside the booking-service orchestration."
+          },
+          "response": []
+        },
+        {
+          "name": "Hotel - Create Reservation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientReference\": \"POSTMAN-TEST-0001\",\n  \"destination\": \"Maui, Hawaii\",\n  \"checkIn\": \"2027-03-15\",\n  \"checkOut\": \"2027-03-20\",\n  \"hotel\": \"Wailea Beach Resort\",\n  \"room\": \"Ocean View King\",\n  \"nightlyRate\": 364.00,\n  \"taxes\": 220.00,\n  \"total\": 1820.00\n}"
+            },
+            "url": {
+              "raw": "{{hotelBaseUrl}}/api/hotels/reservations",
+              "host": ["{{hotelBaseUrl}}"],
+              "path": ["api", "hotels", "reservations"]
+            },
+            "description": "Directly creates a reservation on the hotel supplier service. Optionally add header X-Demo-Scenario: HOTEL_FAILURE to force a 503."
+          },
+          "response": []
+        },
+        {
+          "name": "Car - Check Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{carBaseUrl}}/api/cars/availability?pickupDate=2027-03-15&returnDate=2027-03-20&carClass=Standard SUV",
+              "host": ["{{carBaseUrl}}"],
+              "path": ["api", "cars", "availability"],
+              "query": [
+                { "key": "pickupDate", "value": "2027-03-15" },
+                { "key": "returnDate", "value": "2027-03-20" },
+                { "key": "carClass", "value": "Standard SUV" }
+              ]
+            },
+            "description": "Direct call to the car supplier service (real, independent Spring Boot service on :8082)."
+          },
+          "response": []
+        },
+        {
+          "name": "Car - Create Reservation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientReference\": \"POSTMAN-TEST-0001\",\n  \"pickupDate\": \"2027-03-15\",\n  \"returnDate\": \"2027-03-20\",\n  \"carClass\": \"Standard SUV\",\n  \"dailyRate\": 74.00,\n  \"taxes\": 20.00,\n  \"total\": 370.00\n}"
+            },
+            "url": {
+              "raw": "{{carBaseUrl}}/api/cars/reservations",
+              "host": ["{{carBaseUrl}}"],
+              "path": ["api", "cars", "reservations"]
+            },
+            "description": "Directly creates a reservation on the car supplier service. Optionally add header X-Demo-Scenario: CAR_TIMEOUT or CAR_AMBIGUOUS to exercise supplier-side scenario behavior directly."
+          },
+          "response": []
+        },
+        {
+          "name": "Car - Get Reservation by Client Reference",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{carBaseUrl}}/api/cars/reservations/by-client-reference/POSTMAN-TEST-0001",
+              "host": ["{{carBaseUrl}}"],
+              "path": ["api", "cars", "reservations", "by-client-reference", "POSTMAN-TEST-0001"]
+            },
+            "description": "The lookup the Reconcile action uses after a CAR_AMBIGUOUS timeout, to determine after the fact whether an orphan reservation exists by the client-generated reference."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

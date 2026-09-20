@@ -1,0 +1,75 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: booking-service
+  datasource:
+    url: jdbc:sqlserver://localhost:${MSSQL_PORT:1433};databaseName=${MSSQL_DB:smartrebook};encrypt=true;trustServerCertificate=true
+    username: sa
+    password: ${MSSQL_SA_PASSWORD:DevOnly_P@ssw0rd123}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+  mvc:
+    view:
+      prefix: /WEB-INF/jsp/
+      suffix: .jsp
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+smartrebook:
+  suppliers:
+    hotel-base-url: http://localhost:${HOTEL_SUPPLIER_PORT:8081}
+    car-base-url: http://localhost:${CAR_SUPPLIER_PORT:8082}
+  demo:
+    enabled: true
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 2000
+        # 3s read timeout is deliberately shorter than the CAR_TIMEOUT/CAR_AMBIGUOUS supplier
+        # sleep (8s) so the client genuinely times out before the supplier responds.
+        readTimeout: 3000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      hotelSupplier:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+      carSupplier:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      # Bounded retry on availability GETs only - reservation POSTs are never blindly retried
+      # (see README: Retries).
+      hotelAvailability:
+        maxAttempts: 2
+        waitDuration: 300ms
+      carAvailability:
+        maxAttempts: 2
+        waitDuration: 300ms
+
+logging:
+  level:
+    com.smartrebook: INFO

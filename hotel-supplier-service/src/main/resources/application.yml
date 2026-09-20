@@ -1,0 +1,13 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: hotel-supplier-service
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+logging:
+  level:
+    com.smartrebook.hotel: INFO

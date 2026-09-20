@@ -1,0 +1,13 @@
+target/
+.idea/
+*.iml
+*.iws
+.vscode/
+.env
+logs/
+*.log
+mssql-data/
+*.class
+.DS_Store
+Thumbs.db
+.playwright-mcp/
