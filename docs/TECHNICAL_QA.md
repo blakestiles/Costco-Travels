@@ -1,6 +1,7 @@
 # Technical Q&A
 
-Conversational answers to twenty questions I'd expect after the demo, grounded in what's actually built.
+Conversational answers to twenty questions this project tends to raise, grounded in what's actually
+built.
 
 ### 1. Walk me through the architecture.
 

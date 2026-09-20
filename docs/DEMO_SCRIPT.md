@@ -1,8 +1,8 @@
-# Demo Script
+# Demo Walkthrough
 
-A run-of-show for a live interview demo, under 4 minutes for the core path, with an optional
-appendix if there's time left. Record a screen capture of this beforehand as a fallback — live demos
-fail.
+A guided walkthrough of the core flow, under 4 minutes, with an optional appendix covering the
+ambiguous-timeout/reconciliation path. Recording a screen capture beforehand as a fallback is a good
+idea — live demos are always a little riskier than a recording.
 
 Before starting: run `./scripts/start-demo.sh` (or `start-demo.ps1`), confirm all three services are
 healthy, and open http://localhost:8080 in a browser at 1440px.
@@ -13,9 +13,9 @@ healthy, and open http://localhost:8080 in a browser at 1440px.
 Click **View Upcoming Trip** on the home page, or navigate to **My Trips** and open booking
 `CT-DEMO-78291`.
 
-> "I got curious about a public workflow on the Costco Travel site — changing the dates on an existing
-> hotel-and-car booking — and used it as a starting point to dig into a distributed-systems reliability
-> problem. This is a prototype I built to explore it, not a copy of their system."
+> "This is a prototype built around a public workflow on the Costco Travel site — changing the dates on
+> an existing hotel-and-car booking — used as a starting point to dig into a distributed-systems
+> reliability problem. It's a prototype exploring that problem, not a copy of their system."
 
 **2. Change the trip dates (0:30)**
 Click **Change Trip**. The dates default to March 15–20, 2027. Click **Check Availability**.

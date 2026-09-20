@@ -50,6 +50,6 @@
       <span class="footer-sep">|</span> <a href="/not-included">Site Map</a>
       <span class="footer-sep">|</span> <a href="/not-included">Terms &amp; Conditions</a>
       <span class="footer-sep">|</span> <a href="/not-included">Your Privacy Rights</a></p>
-    <p class="footer-legal">Independent engineering prototype created for interview discussion. Not affiliated with Costco Wholesale or Costco Travel.</p>
+    <p class="footer-legal">Independent engineering prototype. Not affiliated with Costco Wholesale or Costco Travel.</p>
   </div>
 </footer>

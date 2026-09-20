@@ -13,7 +13,7 @@
   <div class="page-wrap">
     <div class="panel">
       <h1>Not Part of This Prototype</h1>
-      <p>This interview demo focuses specifically on the <strong>Smart Rebook</strong> change-of-reservation
+      <p>This prototype focuses specifically on the <strong>Smart Rebook</strong> change-of-reservation
         flow. This area of the real Costco Travel site is not implemented here.</p>
       <p><a class="btn btn-primary" href="/account/bookings">Go to Account / Bookings</a>
         <a class="btn btn-secondary" href="/">Back to Home</a></p>

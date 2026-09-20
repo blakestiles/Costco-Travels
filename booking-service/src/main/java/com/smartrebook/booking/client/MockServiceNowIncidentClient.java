@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Active whenever SERVICENOW_BASE_URL is not configured - i.e. always, in this prototype.
- * Intentionally mocked: this interview prototype has no access to Costco's ServiceNow
+ * Intentionally mocked: this prototype has no access to a real ServiceNow
  * environment. The IncidentClient interface isolates the provider so a real REST implementation
  * could replace this mock without touching IncidentService or the ops UI.
  */

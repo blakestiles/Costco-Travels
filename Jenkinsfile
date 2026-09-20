@@ -92,7 +92,7 @@ pipeline {
 
         stage('Deploy') {
             // NON-PRODUCTION PLACEHOLDER. This project has no real deployment target — it is an
-            // interview demo prototype run locally via scripts/start-demo.sh. A real deploy stage
+            // demo prototype run locally via scripts/start-demo.sh. A real deploy stage
             // here would, for example, push the booking-service WAR to an application server or
             // container registry and roll it out behind a load balancer; it is deliberately not
             // implemented against any actual infrastructure.

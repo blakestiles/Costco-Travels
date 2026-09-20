@@ -1,7 +1,7 @@
 # Talking Points
 
-Short, conversational answers to the "why" questions that tend to come up in the room, not the deep
-technical walkthroughs (those are in `TECHNICAL_QA.md`).
+Short, conversational answers to the "why" questions this project tends to raise, as opposed to the
+deeper technical walkthroughs in `TECHNICAL_QA.md`.
 
 **Why Spring Boot?**
 It's the framework I associate most with what a real enterprise Java backend team is actually running,
@@ -10,11 +10,10 @@ binding — without hand-rolling infrastructure. For a project meant to demonstr
 judgment rather than framework novelty, that felt like the right choice.
 
 **Why JSP instead of React?**
-Two reasons, honestly. First, the plan was explicit that screen time isn't the product here — the
-orchestration and persistence layer is what earns interview credibility, not the frontend. Second, JSP
-plus a REST API is a very real, very common enterprise pattern, and it let me spend the frontend budget
-on "immediately familiar," not "pixel-perfect," while putting the real effort into the parts that survive
-a follow-up question.
+Two reasons. First, the frontend isn't the point of this project — the orchestration and persistence
+layer is where the real engineering happens, so that's where the effort went. Second, JSP plus a REST API
+is a very real, very common enterprise pattern, and it let the UI aim for "immediately familiar" rather
+than "pixel-perfect," which was the right tradeoff given where the effort needed to go.
 
 **Why JPA and JDBC, not just one?**
 Because they're good at different things. JPA/Hibernate is great for entity writes with relationships and
@@ -24,10 +23,10 @@ call directly, not the kind of thing you want an ORM abstracting for you. Using 
 compromise, it's the right tool.
 
 **Why SQL Server?**
-Mostly because that's what I assumed I'd want to be comfortable with for this kind of role, and I wanted
-a real relational database with a real T-SQL stored procedure in the demo, not an in-memory substitute.
-It also forced me to deal with some genuinely SQL-Server-specific gotchas — `DATETIMEOFFSET` vs
-`DATETIME2`, `PERCENTILE_CONT` being window-only — that were worth learning the hard way.
+Mostly because I wanted a real relational database with a real T-SQL stored procedure in the demo, not an
+in-memory substitute. It also forced me to deal with some genuinely SQL-Server-specific gotchas —
+`DATETIMEOFFSET` vs `DATETIME2`, `PERCENTILE_CONT` being window-only — that were worth learning the hard
+way.
 
 **Why idempotency?**
 Because a member's "confirm this change" click can get retried — a flaky network, a double-click, a

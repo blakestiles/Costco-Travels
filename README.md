@@ -1,24 +1,25 @@
 # Costco Travel Smart Rebook
 
-A resilient, self-service reservation-change prototype exploring what happens when a "replace this
-hotel/car booking" operation has to talk to two independent supplier systems and one of them fails —
-or worse, times out without telling you whether it actually succeeded.
+A self-service reservation-change prototype for a hotel + rental car booking, built around one
+question: what should happen when a "replace this booking" operation has to talk to two independent
+supplier systems, and one of them fails — or worse, times out without telling you whether it actually
+went through.
 
-> Independent engineering prototype created for interview discussion. Not affiliated with Costco
-> Wholesale or Costco Travel. All member, booking, and supplier data below is synthetic.
+> Independent engineering prototype. Not affiliated with Costco Wholesale or Costco Travel. All member,
+> booking, and supplier data below is synthetic.
 
-## Why I Built This
+## Motivation
 
-I was curious about a public product workflow. The Costco Travel site lets a member change some hotel
-and rental car bookings, and for certain changes the flow is a conservative two-step process: confirm a
-replacement, then cancel the original. That's a sound design choice, not a flaw — cancelling only after
-a replacement is secured protects the member.
+The public Costco Travel site lets a member change certain hotel and rental car bookings, and for some
+changes the flow is a conservative two-step process: confirm a replacement, then cancel the original.
+That's a sound design choice — cancelling only after a replacement is secured protects the member from
+ending up with nothing.
 
-That two-step pattern is genuinely interesting from a distributed-systems angle: could part of it be
-safely orchestrated into a single self-service change, while still protecting the existing reservation
-if the replacement process partially fails? I don't know Costco Travel's actual backend architecture,
-supplier contracts, or internal constraints — this project is one possible design based on observing the
-public product, built as a vehicle to work through a real reliability problem: coordinating a
+That pattern is a good excuse to dig into a real distributed-systems problem: could part of that
+experience be safely folded into a single self-service change, while still protecting the existing
+reservation if the replacement partially fails? This project doesn't assume any knowledge of Costco
+Travel's actual backend, supplier contracts, or internal constraints — it's one possible design based on
+observing the public product, built to work through the harder question underneath it: coordinating a
 multi-supplier transaction that can't rely on a single database transaction to keep it consistent.
 
 ## Problem Statement
@@ -283,20 +284,20 @@ MSYS_NO_PATHCONV=1 docker exec smartrebook-sqlserver /opt/mssql-tools18/bin/sqlc
 
 Demo booking **CT-DEMO-78291**. Reset any time via Demo Controls → Reset Demo, or `POST /api/demo/reset`.
 
-## Interview Demo
+## Demo Walkthrough
 
-See [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) for the full run-of-show, and
+See [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) for a guided walkthrough of the core flow, and
 [`docs/TALKING_POINTS.md`](docs/TALKING_POINTS.md) / [`docs/TECHNICAL_QA.md`](docs/TECHNICAL_QA.md) for
-the Q&A that follows it.
+design rationale and deeper technical Q&A.
 
-## What I Would Explore With Real Domain Context
+## What I'd Explore With Real Domain Context
 
-I don't know Costco Travel's actual architecture; this is one possible design based on public product
-behavior. Given real domain context, I'd want to dig into: actual supplier contract capabilities
-(can a real hotel/car supplier API support a temporary inventory hold instead of an immediate
-book-then-cancel?), payment authorization and how a mid-flight price change should interact with a
-already-authorized charge, change fees and package-level cancellation rules that a real travel product
-almost certainly has and this prototype does not model, what a real support/ops workflow around a stuck
-reconciliation actually looks like, real observability and SLOs instead of a demo-scale ops page, real
-authentication and PCI scope, and how a genuine ServiceNow/Splunk integration would actually behave under
-their production constraints rather than the mocks used here.
+This is one possible design based on public product behavior, not a reverse-engineering of Costco
+Travel's actual architecture. Given real domain context, worthwhile next questions would include: actual
+supplier contract capabilities (can a real hotel/car supplier API support a temporary inventory hold
+instead of an immediate book-then-cancel?), payment authorization and how a mid-flight price change
+should interact with an already-authorized charge, change fees and package-level cancellation rules that
+a real travel product almost certainly has and this prototype does not model, what a real support/ops
+workflow around a stuck reconciliation actually looks like, real observability and SLOs instead of a
+demo-scale ops page, real authentication and PCI scope, and how a genuine ServiceNow/Splunk integration
+would behave under production constraints rather than the mocks used here.

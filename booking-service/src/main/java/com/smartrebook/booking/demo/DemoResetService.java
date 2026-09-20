@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Runs live, mid-interview-demo, so this must be reliable: direct JDBC truncate + deterministic
+ * Runs live during demos, so this must be reliable: direct JDBC truncate + deterministic
  * reseed (mirrors V4__seed_demo_data.sql) rather than relying on Hibernate cascades, plus
  * best-effort resets of each supplier's in-memory state and the demo scenario toggle.
  */
