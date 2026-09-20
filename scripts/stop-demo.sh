@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stops the three Spring Boot processes started by start-demo.sh, using the PID files it wrote.
-# Leaves the SQL Server container running by default (least surprising before a live demo — a
+# Leaves the SQL Server container running by default (least surprising before a live demo - a
 # re-run of start-demo.sh should not need a fresh DB pull/migration every time). Pass --with-db
 # to also bring the docker compose stack down.
 set -uo pipefail
@@ -35,7 +35,7 @@ stop_service() {
   rm -f "$pidfile"
 }
 
-echo "== Costco Travel Smart Rebook — stop-demo =="
+echo "== Costco Travel Smart Rebook - stop-demo =="
 stop_service "booking-service"
 stop_service "car-supplier-service"
 stop_service "hotel-supplier-service"

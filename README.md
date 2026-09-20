@@ -2,7 +2,7 @@
 
 A self-service reservation-change prototype for a hotel + rental car booking, built around one
 question: what should happen when a "replace this booking" operation has to talk to two independent
-supplier systems, and one of them fails — or worse, times out without telling you whether it actually
+supplier systems, and one of them fails - or worse, times out without telling you whether it actually
 went through.
 
 > Independent engineering prototype. Not affiliated with Costco Wholesale or Costco Travel. All member,
@@ -12,13 +12,13 @@ went through.
 
 The public Costco Travel site lets a member change certain hotel and rental car bookings, and for some
 changes the flow is a conservative two-step process: confirm a replacement, then cancel the original.
-That's a sound design choice — cancelling only after a replacement is secured protects the member from
+That's a sound design choice - cancelling only after a replacement is secured protects the member from
 ending up with nothing.
 
 That pattern is a good excuse to dig into a real distributed-systems problem: could part of that
 experience be safely folded into a single self-service change, while still protecting the existing
 reservation if the replacement partially fails? This project doesn't assume any knowledge of Costco
-Travel's actual backend, supplier contracts, or internal constraints — it's one possible design based on
+Travel's actual backend, supplier contracts, or internal constraints - it's one possible design based on
 observing the public product, built to work through the harder question underneath it: coordinating a
 multi-supplier transaction that can't rely on a single database transaction to keep it consistent.
 
@@ -43,11 +43,11 @@ only cancelled after both the replacement hotel and replacement car reservations
 ```mermaid
 flowchart LR
     Browser["Browser (JSP + vanilla JS + fetch)"]
-    Booking["booking-service :8080\n(WAR — JSP UI, REST API,\norchestration, JPA + JDBC)"]
+    Booking["booking-service :8080\n(WAR - JSP UI, REST API,\norchestration, JPA + JDBC)"]
     Hotel["hotel-supplier-service :8081\n(in-memory reservations)"]
     Car["car-supplier-service :8082\n(in-memory reservations)"]
     DB[("SQL Server :1433\nFlyway / JPA / T-SQL proc")]
-    Ops["/ops — Internal Demo/"]
+    Ops["/ops - Internal Demo/"]
 
     Browser -->|"HTTP"| Booking
     Booking -->|"Feign/HTTP"| Hotel
@@ -57,8 +57,8 @@ flowchart LR
     Ops --> Booking
 ```
 
-Maven multi-module reactor: `shared-contracts` (jar — supplier DTO records), `hotel-supplier-service`
-(jar, :8081), `car-supplier-service` (jar, :8082), `booking-service` (war, :8080 — JSP UI + REST API +
+Maven multi-module reactor: `shared-contracts` (jar - supplier DTO records), `hotel-supplier-service`
+(jar, :8081), `car-supplier-service` (jar, :8082), `booking-service` (war, :8080 - JSP UI + REST API +
 orchestration + persistence, packaged as a WAR because Spring Boot cannot serve JSPs from an executable
 fat JAR; it still runs with `java -jar`).
 
@@ -111,7 +111,7 @@ sequenceDiagram
     B->>H: POST reservations (replacement hotel)
     H-->>B: 201 confirmed
     B->>C: POST reservations (replacement car)
-    Note over B,C: read timeout at 3s — supplier may take up to 8s
+    Note over B,C: read timeout at 3s - supplier may take up to 8s
     C--xB: SupplierTimeoutException (outcome unknown)
 
     alt Nothing was actually created on the supplier side (CAR_TIMEOUT)
@@ -149,7 +149,7 @@ for an idempotency replay **before** any booking-state validation runs, not afte
 
 ## Transaction Boundaries
 
-A relational transaction protects local state — the row for one booking, one change request, one event —
+A relational transaction protects local state - the row for one booking, one change request, one event -
 but it **cannot atomically roll back independent external supplier systems**. If the hotel supplier has
 already confirmed a reservation and the car call subsequently fails, no database `ROLLBACK` undoes the
 hotel supplier's state. That's why compensation is explicit application logic (an HTTP `DELETE` to the
@@ -160,25 +160,25 @@ framework.
 ## Data Model
 
 Tables: `members` · `bookings` (has `version` for JPA `@Version` optimistic locking) · `booking_items` ·
-`change_requests` (has both a `status` **and** a separate `reconciliation_status` column — these are two
+`change_requests` (has both a `status` **and** a separate `reconciliation_status` column - these are two
 independent axes: whether the change request itself finished, and whether a post-hoc reconciliation is
 needed) · `supplier_reservations` · `booking_events` · `idempotency_records` · `incidents`.
 
 Indexes, each justified by a concrete query path (see migration `V2__create_indexes.sql` comments):
 `booking_events (supplier, status, created_at)` for the reliability report, `booking_events
 (correlation_id)` for the transaction-timeline lookup, `bookings (confirmation_number)` unique for the
-primary member lookup, `idempotency_records (idempotency_key)` unique — the correctness guarantee itself
-— and `change_requests (booking_id, status)` for the in-progress-change guard.
+primary member lookup, `idempotency_records (idempotency_key)` unique - the correctness guarantee itself
+- and `change_requests (booking_id, status)` for the in-progress-change guard.
 
 ## SQL / Hibernate / JDBC Decisions
 
-**Hibernate/JPA** is used for all writes — booking, change request, and event entities, with `@Version`
+**Hibernate/JPA** is used for all writes - booking, change request, and event entities, with `@Version`
 optimistic locking on `Booking` to reject a second concurrent change with a `409`.
 
 **JDBC** (`SupplierReliabilityJdbcRepository`, `JdbcTemplate`) is used specifically for the Ops supplier
 reliability report, which calls a hand-written T-SQL stored procedure, `sp_supplier_reliability_report`.
 JPA/Hibernate is a poor fit for a report whose whole point is a database-native windowed percentile
-calculation across arbitrary historical rows — JDBC against a stored procedure is the more honest tool
+calculation across arbitrary historical rows - JDBC against a stored procedure is the more honest tool
 for that job, and it's a concrete, defensible answer to "when would you use JDBC instead of Hibernate?"
 
 Three real gotchas hit and fixed during build:
@@ -190,7 +190,7 @@ Three real gotchas hit and fixed during build:
   Unicode variant.
 - **`PERCENTILE_CONT` is a window function, not a `GROUP BY` aggregate** in T-SQL. It has to be computed
   per-row via `PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY ...) OVER (PARTITION BY supplier)` inside a
-  CTE, then collapsed with `MAX`/`GROUP BY` in the outer query — writing it as a naive aggregate simply
+  CTE, then collapsed with `MAX`/`GROUP BY` in the outer query - writing it as a naive aggregate simply
   does not compile.
 
 ## Observability
@@ -198,7 +198,7 @@ Three real gotchas hit and fixed during build:
 Structured JSON logging via `logstash-logback-encoder`, with the correlation ID (`CHG-XXXXXXXX`, one per
 change request) carried in MDC on every log line, alongside a `service` field identifying which of the
 three Spring Boot services emitted it. An optional `SplunkHecAppender` forwards logs to a Splunk HTTP
-Event Collector — but only if `SPLUNK_HEC_URL`/`SPLUNK_HEC_TOKEN` are set. No paid Splunk account is
+Event Collector - but only if `SPLUNK_HEC_URL`/`SPLUNK_HEC_TOKEN` are set. No paid Splunk account is
 needed to run or demo this project; the appender is completely inert by default.
 
 Each service exposes `/actuator/health`, and the compose SQL Server has its own healthcheck.
@@ -209,7 +209,7 @@ The root `Jenkinsfile` runs: Checkout → Build (`./mvnw -B clean compile`) → 
 published via `junit`) → Integration Test (gated behind `RUN_INTEGRATION_TESTS`, since those tests need a
 live SQL Server) → Package (`./mvnw -B package -DskipTests`) → a lightweight Quality/Verification stage →
 Archive Artifacts → a clearly non-production Deploy placeholder stage. No invented internal
-infrastructure — generic environment variables throughout.
+infrastructure - generic environment variables throughout.
 
 ## Testing
 
@@ -225,11 +225,11 @@ failsafe so `./mvnw test` stays fast.
 
 - **The Feign timeout gotcha.** The YAML property `feign.client.config.default.readTimeout` was tried
   first and silently did not take effect. The fix was an explicit `feign.Request.Options` `@Bean` (2s
-  connect / 3s read), which is authoritative — worth knowing if you ever see a Feign timeout config that
+  connect / 3s read), which is authoritative - worth knowing if you ever see a Feign timeout config that
   looks correct but isn't being honored.
 - **The seeded original booking has no real supplier reservation behind it to cancel.** `CT-DEMO-78291`'s
   hotel/car confirmations (`HTL-DEMO0001`, `CAR-DEMO0001`) are seed data, not reservations the supplier
-  services actually created at startup — so a cancellation call against those specific IDs during a real
+  services actually created at startup - so a cancellation call against those specific IDs during a real
   run would be against IDs the supplier doesn't recognize. This is a demo-data limitation, not a gap in
   the compensation logic itself, which is otherwise exercised end-to-end against reservations the
   suppliers really did create during that run.
@@ -237,14 +237,14 @@ failsafe so `./mvnw test` stays fast.
   ($1,820 hotel + $370 car + $220 taxes = $2,410, a $70 delta from the original $2,340) is deterministic
   demo pricing, not a real tax/fee calculation engine.
 - **`shared-contracts` creates a build-time coupling** between all three services and the DTO module.
-  That's an accepted tradeoff for a project this size — a real system might version supplier contracts
+  That's an accepted tradeoff for a project this size - a real system might version supplier contracts
   independently instead.
 
 ## Assumptions
 
 - Authentication is out of scope; `DemoMemberContext` always resolves to the one seeded member
   (`DEMO-EXEC-001`, Sainath Gandhe, Executive Member). No login page, no credential form.
-- No payment flow exists anywhere in the system — no card number is ever collected or stored.
+- No payment flow exists anywhere in the system - no card number is ever collected or stored.
 - One booking, one member, one demo scenario at a time; this is not a multi-tenant system.
 
 ## What Is Mocked
@@ -265,10 +265,10 @@ calls only; structured JSON logs with correlation IDs; and a JUnit test suite co
 ## How to Run
 
 ```bash
-cp .env.example .env          # dev-only SA password — never commit .env
+cp .env.example .env          # dev-only SA password - never commit .env
 docker compose up -d          # SQL Server (Docker Desktop must be running)
 
-# SQL Server only auto-creates the "master" database — the app database must be created once:
+# SQL Server only auto-creates the "master" database - the app database must be created once:
 MSYS_NO_PATHCONV=1 docker exec smartrebook-sqlserver /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "DevOnly_P@ssw0rd123" \
   -Q "IF DB_ID('smartrebook') IS NULL CREATE DATABASE smartrebook;"
 
@@ -283,12 +283,6 @@ MSYS_NO_PATHCONV=1 docker exec smartrebook-sqlserver /opt/mssql-tools18/bin/sqlc
 | Hotel / car supplier health | http://localhost:8081/actuator/health · http://localhost:8082/actuator/health |
 
 Demo booking **CT-DEMO-78291**. Reset any time via Demo Controls → Reset Demo, or `POST /api/demo/reset`.
-
-## Demo Walkthrough
-
-See [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) for a guided walkthrough of the core flow, and
-[`docs/TALKING_POINTS.md`](docs/TALKING_POINTS.md) / [`docs/TECHNICAL_QA.md`](docs/TECHNICAL_QA.md) for
-design rationale and deeper technical Q&A.
 
 ## What I'd Explore With Real Domain Context
 

@@ -25,7 +25,7 @@ PID_DIR="$ROOT_DIR/scripts/.pids"
 LOG_DIR="$ROOT_DIR/logs"
 mkdir -p "$PID_DIR" "$LOG_DIR"
 
-echo "== Costco Travel Smart Rebook — start-demo =="
+echo "== Costco Travel Smart Rebook - start-demo =="
 
 echo "[1/5] Starting SQL Server (docker compose)..."
 docker compose up -d
@@ -111,7 +111,7 @@ wait_for_health "booking-service" "$BOOKING_SERVICE_PORT" || true
 echo "[5/5] Done."
 echo ""
 echo "=============================================================="
-echo " Costco Travel Smart Rebook — demo environment"
+echo " Costco Travel Smart Rebook - demo environment"
 echo "--------------------------------------------------------------"
 echo " Member Portal   http://localhost:${BOOKING_SERVICE_PORT}"
 echo " Operations      http://localhost:${BOOKING_SERVICE_PORT}/ops"

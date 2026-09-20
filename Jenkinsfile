@@ -1,4 +1,4 @@
-// Costco Travel Smart Rebook — CI pipeline.
+// Costco Travel Smart Rebook - CI pipeline.
 // Independent engineering prototype. Generic environment variables only; no invented
 // internal infrastructure names. See README.md "CI/CD" for how this maps to the project.
 pipeline {
@@ -49,7 +49,7 @@ pipeline {
         stage('Integration Test') {
             // These tests are tagged @Tag("integration") and run under the failsafe plugin.
             // They require a live SQL Server (the docker-compose "sqlserver" service, with the
-            // smartrebook_test database created) reachable at SPRING_DATASOURCE_URL — there is
+            // smartrebook_test database created) reachable at SPRING_DATASOURCE_URL - there is
             // no H2/Testcontainers fallback by default (see README: SQL/Hibernate/JDBC Decisions).
             // In a real CI environment this stage would run against that database; here it is
             // gated behind RUN_INTEGRATION_TESTS so the pipeline stays green without one.
@@ -73,7 +73,7 @@ pipeline {
         }
 
         stage('Quality / Verification') {
-            // Lightweight verification pass. Kept intentionally minimal — no static analysis
+            // Lightweight verification pass. Kept intentionally minimal - no static analysis
             // tool (Checkstyle/SpotBugs/etc.) is configured in the pom, so this stage does not
             // invent one; it re-runs the reactor's own verify-phase checks (dependency
             // convergence, plugin bindings) on the already-built artifacts.
@@ -91,13 +91,13 @@ pipeline {
         }
 
         stage('Deploy') {
-            // NON-PRODUCTION PLACEHOLDER. This project has no real deployment target — it is an
+            // NON-PRODUCTION PLACEHOLDER. This project has no real deployment target - it is an
             // demo prototype run locally via scripts/start-demo.sh. A real deploy stage
             // here would, for example, push the booking-service WAR to an application server or
             // container registry and roll it out behind a load balancer; it is deliberately not
             // implemented against any actual infrastructure.
             steps {
-                echo "Deploy stage placeholder — this pipeline does not deploy to any real environment."
+                echo "Deploy stage placeholder - this pipeline does not deploy to any real environment."
                 echo "A production version would publish the built artifacts (see 'Archive Artifacts')"
                 echo "to an artifact repository and trigger a rollout in a target environment."
             }

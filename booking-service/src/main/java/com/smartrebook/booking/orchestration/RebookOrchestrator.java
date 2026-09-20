@@ -343,7 +343,7 @@ public class RebookOrchestrator {
                 changeRequest.getReconciliationStatus().name(), booking.getConfirmationNumber(), newConfirmationNumber,
                 changeRequest.getOldTotal(), newTotal, changeRequest.getPriceDifference(),
                 "Your trip has been successfully updated",
-                "Original: " + booking.getConfirmationNumber() + " — Cancelled. New: " + newConfirmationNumber + " — Confirmed.",
+                "Original: " + booking.getConfirmationNumber() + " - Cancelled. New: " + newConfirmationNumber + " - Confirmed.",
                 true, eventsFor(correlationId));
 
         idempotencyService.complete(idempotencyRecord, response);
